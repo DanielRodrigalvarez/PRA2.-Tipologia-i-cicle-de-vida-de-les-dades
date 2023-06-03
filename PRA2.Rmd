@@ -185,7 +185,7 @@ Observem que, tot i que hi ha dues compronents principals que expliquen
 juntes un 34,9% per la variància, aquesta està molt repartida i
 necessitem 13 dels 14 components per explicar el 95% de la variància.
 
-A priori treballarem amb les 14 observacions originals.
+
 
 ### Normalització de les dades
 
