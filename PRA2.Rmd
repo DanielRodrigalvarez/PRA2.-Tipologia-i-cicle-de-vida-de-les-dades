@@ -1,0 +1,234 @@
+---
+title: "PRA2. Tipologia i cicle de vida de les dades"
+author: "Autor: Daniel Rodrigálvarez Morente"
+date: "Maig 2023"
+output: 
+  pdf_document:
+    highlight: zenburn
+    toc: yes
+  word_document: default
+  html_document:
+    code_folding: show
+    theme:
+      bg: "#202123"
+      fg: "#B8BCC2"
+      primary: "#EA80FC"
+      secondary: "#00DAC6"
+      base_font:
+        google: Prompt
+      heading_font:
+        google: Proza Libre
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+if(!require('ggplot2')) install.packages('ggplot2'); library('ggplot2')
+if(!require('Rmisc')) install.packages('Rmisc'); library('Rmisc')
+if(!require('dplyr')) install.packages('dplyr'); library('dplyr')
+if(!require('xfun')) install.packages('xfun'); library('xfun')
+if(!require('gridExtra')) install.packages("gridExtra"); library(gridExtra)
+```
+
+
+# Presentació del projecte i objectiu de l'anàlisi
+
+
+
+# Consideracions referents al dataset
+
+- origen de les dades
+- tipus de llicència
+
+
+# Descripció del dataset. Perquè és important i quina pregunta/problema pretén respondre?
+
+Carreguem el conjunt de dades i fem una revisió del contingut de les diferents variables
+```{r}
+path = 'heart.csv'
+dades <- read.csv(path, sep = ",")
+str(dades)
+```
+Podem observar que es tracta d'un dataset amb 303 observacions i 14 variables totes elles amb números enters excepte la variable oldpeak que conté dades decimals.
+
+
+## Descripció de les variables
+
+\**age**. Edat de la persona
+
+\**sex**. Sexe de la persona
+No indica res a l'origen del dataset, però considerant que els homes es diagnostiquen més amb atacs de cor (o en tenen més), considerem que 1 és home i 0 és dona
+
+\**cp**.  chest pain type
+Value 1: typical angina
+Value 2: atypical angina
+Value 3: non-anginal pain
+Value 4: asymptomatic
+
+\**trtbps**. Pressió arterial en repòr (en mm/Hg)
+
+\**chol**. cholestoral in mg/dl fetched via BMI sensor
+
+\**fbs**. (fasting blood sugar > 120 mg/dl) (1 = true; 0 = false)
+
+\**restecg**. resting electrocardiographic results
+Value 0: normal
+Value 1: having ST-T wave abnormality (T wave inversions and/or ST elevation or depression of > 0.05 mV)
+Value 2: showing probable or definite left ventricular hypertrophy by Estes' criteria
+
+\**thalachh**. maximum heart rate achieved
+
+\**exng**. exercise induced angina (1 = yes; 0 = no)
+
+\**oldpeak**. Previous peak
+
+\**slp**. Slope
+0 = unsloping
+1 = flat
+2 = downsloping
+
+\**caa**. number of major vessels (0-4)
+
+\**thall**. Thal rate
+0 = null
+1 = fixed defect
+2 = normal
+3 = reversable defect
+
+\**output**. Target variable (0= less chance of heart attack 1= more chance of heart attack)
+0: < 50% diameter narrowing. less chance of heart disease
+1: > 50% diameter narrowing. more chance of heart disease
+
+
+Extra (incorporar)
+**Medical Definitions 1- Angina: chest pain due to reduced blood flow to the heart muscles. There're 3 types of angina: stable angina, unstable angina, and variant angina. To know more about angina click here: https://www.nhs.uk/conditions/angina/#:~:text=Angina%20is%20chest%20pain%20caused,of%20these%20more%20serious%20problems.
+
+2- Cholesterol: a waxy substance found in the body cells and it belongs to a group of organic molecules called lipids. There are 3 types of cholesterol; high-density lipoprotein (HDL) and it's known as the "good cholesterol", low-density lipoprotein (LDL) known as the "bad cholesterol", and very-low-density lipoproteins (VLDL) and as the name implies, they're low dense particles that carry triglycerides in the blood.
+
+3- ECG: short for electrocardiogram, it's a routine test usually done to check the heart's electrical activity.
+
+4- ST depression: a type of ST-segment abnormality. the ST segment is the flat, isoelectric part of the ECG and it represents the interval between ventricular depolarization and repolarization. For more details check this link: https://litfl.com/st-segment-ecg-library/.
+
+5- Thalassemia: it's a genetic blood disorder that is characterized by a lower rate of hemoglobin than normal.
+
+
+# Integració i selecció de les dades d’interès a analitzar.
+Pot ser el resultat d’addicionar diferents datasets o una subselecció útil de les dades originals, en base a l’objectiu que es vulgui aconseguir.
+
+```{r}
+summary(dades)
+```
+
+Comprovem que hi ha 302 registres diferents, per la qual cosa, donat el nivell d'especificitat de les dades, podem valorar que hi ha un registre repetit.
+```{r}
+dim(unique(dades))
+```
+
+Eliminem el registre repetit i conservarem la resta donat que tenim un número de registres perfectement gestionable
+```{r}
+dades <- unique(dades)
+```
+
+
+O POTSER NO. VARLORAR SI APORTA ALGUNA COSA
+
+Per tal valorar quins valors ens interessa utilitzar per fer l'anàlisi, començarem fer una revisió de la distribució de cada una de les variables 
+
+```{r}
+histogrames_num <- list()
+variables_num <- names(dades)
+dades_num <- dades %>% select(all_of(variables_num))
+
+for(i in 1:ncol(dades_num)){
+  var <- names(dades_num)[i]
+  grafic <- ggplot(dades_num, aes_string(x = var)) +
+    geom_histogram(bins = 10, fill = "blue", color = "black") +
+    labs(y = "") +
+    theme(panel.grid = element_blank(), panel.background = element_blank())
+  histogrames_num[[i]] <- grafic
+}
+
+multiplot(plotlist = histogrames_num, cols = 4)
+```
+
+Aplicarem una anàlisi de components principals per tal valorar si podem treballar amb menys variables
+
+```{r}
+dades_acp <- prcomp(dades, center = TRUE, scale = TRUE)
+summary(dades_acp)
+```
+Observem que, tot i que hi ha dues compronents principals que expliquen juntes un 34,9% per la variància, aquesta està molt repartida i necessitem 13 dels 14 components per explicar el 95% de la variància.
+
+A priori treballarem amb les 14 observacions originals.
+
+
+### Normalització de les dades
+
+Tenim cuatre variables numèriques que ens pot interessar normalitzar per tal que siguin comparables en el nostre estudi. Primer de tot, comprovarem si la distribució de les variables trtbps, chol, thalachh i oldpeak és o no normal aplicant el test de Shapiro
+
+```{r}
+shapiro_trtbps <- shapiro.test(dades$trtbps)
+print(shapiro_trtbps)
+```
+
+```{r}
+shapiro_chol <- shapiro.test(dades$chol)
+print(shapiro_chol)
+```
+
+```{r}
+shapiro_thalachh <- shapiro.test(dades$thalachh)
+print(shapiro_thalachh)
+```
+
+```{r}
+shapiro_oldpeak <- shapiro.test(dades$oldpeak)
+print(shapiro_oldpeak)
+```
+En els quatre casos, observant el valor de p podem dir que es rebutja la hipòtesi nul·la i, per tant, no distribueixen com una normal.
+
+En base a aquesta no normalitat, 
+
+```{r}
+print(table(dades$sex, dades$output))
+
+print(prop.table(table(dades$sex, dades$output), 2))
+
+barplot(table(dades$sex, dades$output), beside = TRUE, col = c("grey", "black"), legend = rownames(table(dades$sex, dades$output)))
+```
+
+```{r}
+print(prop.table(table(dades$chol, dades$output)))
+
+hist(table(dades$chol, dades$output), col = c("grey", "black"), legend = rownames(table(dades$chol, dades$output)), xlab = "chol")
+```
+
+```{r}
+boxplot(dades$age~dades$output)
+```
+
+
+# Neteja de les dades. Les dades contenen zeros o elements buits?
+
+Gestiona cadascun d’aquests casos.
+
+Identifica i gestiona els valors extrems.
+
+
+
+# Anàlisi de les dades
+Selecció dels grups de dades que es volen analitzar/comparar (p. e., si es volen comparar grups de dades, quins són aquests grups i quins tipus d’anàlisi s’aplicaran?).
+
+Comprovació de la normalitat i homogeneïtat de la variància.
+
+Aplicació de proves estadístiques per comparar els grups de dades. En funció de les dades i de l’objectiu de l’estudi, aplicar proves de contrast d’hipòtesis, correlacions, regressions, etc. Aplicar almenys tres mètodes d’anàlisi diferents.
+
+
+# Conclusions
+
+A partir dels resultats obtinguts, quines són les conclusions?
+
+Els resultats permeten respondre al problema?
