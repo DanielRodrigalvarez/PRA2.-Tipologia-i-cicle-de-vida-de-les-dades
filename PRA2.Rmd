@@ -39,10 +39,16 @@ if(!require('gridExtra')) install.packages("gridExtra"); library(gridExtra)
 
 # Presentació del projecte i objectiu de l'anàlisi
 
+El projecte que es desenvolupa a continuació consisteix en l'estudi de les causes que determinen la possibilitat una cardiopatia. En concret, es vol determinar si els diferents indicadors estudiats tenen una incidència diferent pels homes i les dones.
+
 # Consideracions referents al dataset
 
--   origen de les dades
--   tipus de llicència
+El dataset utilitzat conté informació de diferents indicadors mèdics de persones que han patit o no una cardiopatia.
+
+Les dades han estat publicades per Rashik Rahman sota llicència CC0: Public Domain a www.kaggle.com i es pot accedir a les mateixes a través del següent enllaç: https://www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset
+
+No s'han realitzat modificacions prèvies al conjunt de dades original.
+
 
 # Descripció del dataset. Perquè és important i quina pregunta/problema pretén respondre?
 
@@ -61,7 +67,7 @@ conté dades decimals.
 
 ## Descripció de les variables
 
-\- **age**. Edat de la persona
+\- **age**. Edat de la persona (1 = male; 0 = female)
 
 \- **sex**. Sexe de la persona No indica res a l'origen del dataset,
 però considerant que els homes es diagnostiquen més amb atacs de cor (o
