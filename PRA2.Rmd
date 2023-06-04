@@ -62,47 +62,45 @@ str(dades)
 ```
 
 Podem observar que es tracta d'un dataset amb 303 observacions i 14
-variables totes elles amb números enters excepte la variable oldpeak que
+variables, totes elles amb números enters excepte la variable oldpeak que
 conté dades decimals.
 
 ## Descripció de les variables
 
-\- **age**. Edat de la persona (1 = male; 0 = female)
+\- **age**. Edat de la persona 
 
-\- **sex**. Sexe de la persona No indica res a l'origen del dataset,
-però considerant que els homes es diagnostiquen més amb atacs de cor (o
-en tenen més), considerem que 1 és home i 0 és dona
+\- **sex**. Sexe de la persona (1 = home; 0 = dona)
 
-\- **cp**. chest pain type Value 1: typical angina Value 2: atypical
-angina Value 3: non-anginal pain Value 4: asymptomatic
+\- **cp**. chest pain type Value (1: typical angina Value 2: atypical
+angina Value 3: non-anginal pain Value 4: asymptomatic)
 
 \- **trtbps**. Pressió arterial en repòr (en mm/Hg)
 
 \- **chol**. cholestoral in mg/dl fetched via BMI sensor
 
-\- **fbs**. (fasting blood sugar \> 120 mg/dl) (1 = true; 0 = false)
+\- **fbs**. (fasting blood sugar \> 120 mg/dl) (1 = cert; 0 = fals)
 
-\- **restecg**. resting electrocardiographic results Value 0: normal
-Value 1: having ST-T wave abnormality (T wave inversions and/or ST
-elevation or depression of \> 0.05 mV) Value 2: showing probable or
-definite left ventricular hypertrophy by Estes' criteria
+\- **restecg**. resting electrocardiographic results (0 = normal;
+1 = having ST-T wave abnormality (T wave inversions and/or ST
+elevation or depression of \> 0.05 mV); 2: showing probable or
+definite left ventricular hypertrophy by Estes' criteria)
 
 \- **thalachh**. maximum heart rate achieved
 
-\- **exng**. exercise induced angina (1 = yes; 0 = no)
+\- **exng**. exercise induced angina (1 = sí; 0 = no)
 
 \- **oldpeak**. Previous peak
 
-\- **slp**. Slope 0 = unsloping 1 = flat 2 = downsloping
+\- **slp**. Slope (0 = unsloping 1 = flat 2 = downsloping)
 
 \- **caa**. number of major vessels (0-4)
 
-\- **thall**. Thal rate 0 = null 1 = fixed defect 2 = normal 3 =
-reversable defect
+\- **thall**. Thal rate (0 = null; 1 = fixed defect; 2 = normal; 3 =
+reversable defect)
 
-\- **output**. Target variable (0= less chance of heart attack 1= more
-chance of heart attack) 0: \< 50% diameter narrowing. less chance of
-heart disease 1: \> 50% diameter narrowing. more chance of heart disease
+\- **output**. Target variable (0 = less chance of heart attack (< 50% diameter narrowing. less chance of
+heart disease); 1= more
+chance of heart attack (> 50% diameter narrowing. more chance of heart disease))
 
 Extra (incorporar)
 \- **Medical Definitions 1- Angina: chest pain due to
