@@ -131,36 +131,14 @@ lower rate of hemoglobin than normal.
 
 # Integració i selecció de les dades d'interès a analitzar.
 
-Pot ser el resultat d'addicionar diferents datasets o una subselecció
-útil de les dades originals, en base a l'objectiu que es vulgui
-aconseguir.
-
+Revisem la distribució de les diferents variables
 ```{r}
 summary(dades)
 ```
+A priori, no observem que hi hagi valor perduts, però més endevant farem una comprovació adhoc.
 
-Comprovem que hi ha 302 registres diferents, per la qual cosa, donat el
-nivell d'especificitat de les dades, podem valorar que hi ha un registre
-repetit.
-
-```{r}
-dim(unique(dades))
-```
-
-Eliminem el registre repetit i conservarem la resta donat que tenim un
-número de registres perfectement gestionable
-
-```{r}
-dades <- unique(dades)
-```
-
-O POTSER NO. VARLORAR SI APORTA ALGUNA COSA
-
-Per tal valorar quins valors ens interessa utilitzar per fer l'anàlisi,
-començarem fer una revisió de la distribució de cada una de les
-variables
-
-```{r}
+Fem una representació de les diferents variables per tal de facilitar la revisió prèvia del dataset
+```{r, warning=FALSE}
 histogrames_num <- list()
 variables_num <- names(dades)
 dades_num <- dades %>% select(all_of(variables_num))
@@ -176,6 +154,34 @@ for(i in 1:ncol(dades_num)){
 
 multiplot(plotlist = histogrames_num, cols = 4)
 ```
+Apreciem que hi ha més informació d'homes que de dones i que el número de registres amb output igual a 1 és lleugerament superior al valor 0.
+
+Revisem si tenim registres amb identics valors a totes les variables per tal de valorar si tenim registres duplicats
+```{r}
+dim(unique(dades))
+```
+Comprovem que hi ha 302 registres diferents, per la qual cosa, donat el
+nivell d'especificitat de les dades, considerem que hi ha un registre
+repetit.
+
+Eliminem el registre repetit i conservem la resta donat que tenim un
+número de registres perfectement gestionable i, per tant no és necessari plantejar agrupacions que facilitin l'ús del dataset
+```{r}
+dades <- unique(dades)
+```
+
+Donat que l'estudi es base en la diferència entre homes i dones, ens interessa comprobar quina informació tenim per cada grup
+```{r}
+print('Distribució entre homes i dones en valors absoluts:')
+print(addmargins(table(dades$sex, dades$output)))
+print('Pes relatiu de cada sexe dins el valor de la variable output:')
+print(round(prop.table(table(dades$sex, dades$output), 2), 2))
+print('Pes relatiu de la variable output dins de cada sexe:')
+print(round(prop.table(table(dades$sex, dades$output), 1), 2))
+```
+Observem que tenim 207 homes i 96 dones i que la distribució del camp output dins de cada grup és diferent, tenint més pes en el valor 1 en dones que en homes.
+
+O POTSER NO. VARLORAR SI APORTA ALGUNA COSA
 
 Aplicarem una anàlisi de components principals per tal valorar si podem
 treballar amb menys variables
