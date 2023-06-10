@@ -34,7 +34,8 @@ if(!require('ggplot2')) install.packages('ggplot2'); library('ggplot2')
 if(!require('Rmisc')) install.packages('Rmisc'); library('Rmisc')
 if(!require('dplyr')) install.packages('dplyr'); library('dplyr')
 if(!require('xfun')) install.packages('xfun'); library('xfun')
-if(!require('gridExtra')) install.packages("gridExtra"); library(gridExtra)
+if(!require('gridExtra')) install.packages("gridExtra"); library('gridExtra')
+if(!require('VIM')) install.packages("VIM"); library('VIM')
 ```
 
 # Presentació del projecte i objectiu de l'anàlisi
@@ -154,7 +155,9 @@ for(i in 1:ncol(dades_num)){
 
 multiplot(plotlist = histogrames_num, cols = 4)
 ```
-Apreciem que hi ha més informació d'homes que de dones i que el número de registres amb output igual a 1 és lleugerament superior al valor 0.
+Hi ha més informació d'homes que de dones i el número de registres amb output igual a 1 és lleugerament superior al valor 0.
+
+Observant les gràfiques, veiem que hi ha quatre variables que podrien tenir una distribució similar a una normal (age, chol, trtbps i thalachh). En tot cas, més endavant farem una comprovació adhoc per tal d'assegurar-ho.
 
 Revisem si tenim registres amb identics valors a totes les variables per tal de valorar si tenim registres duplicats
 ```{r}
@@ -170,7 +173,7 @@ número de registres perfectement gestionable i, per tant no és necessari plant
 dades <- unique(dades)
 ```
 
-Donat que l'estudi es base en la diferència entre homes i dones, ens interessa comprobar quina informació tenim per cada grup
+Donat que l'estudi està dirigit a identificar diferències entre homes i dones, ens interessa comprobar quina informació tenim per cada grup
 ```{r}
 print('Distribució entre homes i dones en valors absoluts:')
 print(addmargins(table(dades$sex, dades$output)))
@@ -179,13 +182,14 @@ print(round(prop.table(table(dades$sex, dades$output), 2), 2))
 print('Pes relatiu de la variable output dins de cada sexe:')
 print(round(prop.table(table(dades$sex, dades$output), 1), 2))
 ```
-Observem que tenim 207 homes i 96 dones i que la distribució del camp output dins de cada grup és diferent, tenint més pes en el valor 1 en dones que en homes.
+Hi ha 207 homes i 96 dones i la distribució del camp output dins de cada grup és diferent, tenint més pes el valor 1 en dones que en homes.
+```{r}
+barplot(table(dades$sex, dades$output), beside = TRUE, col = c("grey", "black"), legend = rownames(table(dades$sex, dades$output)))
+```
 
-O POTSER NO. VARLORAR SI APORTA ALGUNA COSA
 
-Aplicarem una anàlisi de components principals per tal valorar si podem
+Farem una anàlisi de components principals per tal valorar si podem
 treballar amb menys variables
-
 ```{r}
 dades_acp <- prcomp(dades, center = TRUE, scale = TRUE)
 summary(dades_acp)
@@ -199,7 +203,7 @@ necessitem 13 dels 14 components per explicar el 95% de la variància.
 
 ### Normalització de les dades
 
-Tenim cuatre variables numèriques que ens pot interessar normalitzar per
+Tenim quatre variables numèriques que ens pot interessar normalitzar per
 tal que siguin comparables en el nostre estudi. Primer de tot,
 comprovarem si la distribució de les variables trtbps, chol, thalachh i
 oldpeak és o no normal aplicant el test de Shapiro
@@ -227,24 +231,16 @@ print(shapiro_oldpeak)
 En els quatre casos, observant el valor de p podem dir que es rebutja la
 hipòtesi nul·la i, per tant, no es distribueixen com una normal.
 
+
+ELIMINAR O COMENTAR
 ```{r}
-print(table(dades$sex, dades$output))
-
-print(prop.table(table(dades$sex, dades$output), 2))
-
-barplot(table(dades$sex, dades$output), beside = TRUE, col = c("grey", "black"), legend = rownames(table(dades$sex, dades$output)))
-```
-
-```{r}
-print(prop.table(table(dades$chol, dades$output)))
-
 hist(table(dades$chol, dades$output), col = c("grey", "black"), legend = rownames(table(dades$chol, dades$output)), xlab = "chol")
 ```
 
 # Neteja de les dades. Les dades contenen zeros o elements buits?
 
 Tot i que amb el resum del dataset no apareixien valors perduts, fem una
-nova comprovació per evitar errors d'apreciació
+adhoc
 
 ```{r}
 colSums(is.na(dades))
@@ -262,8 +258,8 @@ Fem una revisió de la possible existència de valors extrems
 ```{r}
 var_out <- c()
 for (i in 1:ncol(dades)){
-outl <- boxplot.stats(dades[,i])$out
-if (!length(outl)==0){var_out <- c(var_out, i)}
+  outl <- boxplot.stats(dades[,i])$out
+  if (!length(outl)==0){var_out <- c(var_out, i)}
 }
 print(names(dades)[var_out])
 ```
@@ -274,6 +270,94 @@ par(mfrow = c(3,3), mar = c(0, 0, 1, 0) + 0.2)
 for (i in var_out) {
   boxplot(dades[, i], main = colnames(dades)[i])
 }
+```
+Per les variables fbs, caa i thall, tot i el resultat del gràfics, podem descartar el fet que hi hagi valors extrems donat que es tracta de variables discretes i els valors observats estan dins de les categories considerades.
+
+Apliquem el criteri de les dues desviacions estàndar per tal de valorar si mantenim el valors originals
+```{r, warning=FALSE}
+trtbps_outliers <- abs(scale(dades$trtbps)) > 2
+chol_outliers <- abs(scale(dades$chol)) > 2
+thalachh_outliers <- abs(scale(dades$thalachh)) > 2
+oldpeak_outliers <- abs(scale(dades$oldpeak)) > 2
+
+outliers <- trtbps_outliers + chol_outliers + thalachh_outliers + oldpeak_outliers
+
+pch_trtbps_chol <- (trtbps_outliers | chol_outliers) * 3
+pch_trtbps_thalachh <- (trtbps_outliers | thalachh_outliers) * 3
+pch_trtbps_oldpeak <- (trtbps_outliers | oldpeak_outliers) * 3
+pch_chol_thalachh <- (chol_outliers | thalachh_outliers) * 3
+pch_chol_oldpeak <- (chol_outliers | oldpeak_outliers) * 3
+pch_thalachh_oldpeak <- (thalachh_outliers | oldpeak_outliers) * 3
+
+plot(dades[, c("trtbps", "chol")], pch=pch_trtbps_chol)
+plot(dades[, c("trtbps", "thalachh")], pch=pch_trtbps_thalachh)
+plot(dades[, c("trtbps", "oldpeak")], pch=pch_trtbps_oldpeak)
+plot(dades[, c("chol", "thalachh")], pch=pch_chol_thalachh)
+plot(dades[, c("trtbps", "oldpeak")], pch=pch_trtbps_oldpeak)
+plot(dades[, c("thalachh", "oldpeak")], pch=pch_thalachh_oldpeak)
+```
+Donat que l'estudi es basa en la comparació entre homes i dones, fe una valoració dels valors extrems per separat, per tal d'evitar que els valors d'un sexe amaguin informació rellevant a l'altra
+```{r}
+dades_homes <- dades[dades$sex==1,]
+dades_dones <- dades[dades$sex==0,]
+
+var_out_dones <- c()
+for (i in 1:ncol(dades_dones)){
+  outl_dones <- boxplot.stats(dades_dones[,i])$out
+  if (!length(outl_dones)==0){var_out_dones <- c(var_out_dones, i)}
+}
+print(names(dades_dones)[var_out_dones])
+
+var_out_homes <- c()
+for (i in 1:ncol(dades_homes)){
+  outl_homes <- boxplot.stats(dades_homes[,i])$out
+  if (!length(outl_homes)==0){var_out_homes <- c(var_out_homes, i)}
+}
+print(names(dades_homes)[var_out_homes])
+```
+Així com en l'estudi conjunt trobavem valors extrems a les variables trtbps, chol,  thalachh i oldpeak, quan estudiem els sexes per separat varien aquests resultats. Per les dones no hi ha variació en quant a variables, donat que la variable exng en ser discreta no la podem considerar, i pels homes no hi haurà valors extrems per la variable chol.
+
+Revisem els registres que contenen valors extrems amb el criteri de les dues desviacions estàndar i comptem quants registres es veuen afectats per outliers, considerant les dades de forma global i separant per sexes 
+```{r}
+print(paste("Número d'outliers considerant les dades de forma global:", count(dades[outliers > 0,])))
+print(paste("Número d'outliers en dones considerant les dades de forma global:", count(dades[c(outliers > 0 & dades$sex==0),])))
+print(paste("Número d'outliers en homes considerant les dades de forma global:", count(dades[c(outliers > 0 & dades$sex==1),])))
+
+trtbps_outliers_d <- abs(scale(dades_dones$trtbps)) > 2
+chol_outliers_d <- abs(scale(dades_dones$chol)) > 2
+thalachh_outliers_d <- abs(scale(dades_dones$thalachh)) > 2
+oldpeak_outliers_d <- abs(scale(dades_dones$oldpeak)) > 2
+
+outliers_dones <- trtbps_outliers_d + chol_outliers_d + thalachh_outliers_d + oldpeak_outliers_d
+print(paste("Número d'outliers en dones:", count(dades_dones[outliers_dones > 0,])))
+
+trtbps_outliers_h <- abs(scale(dades_homes$trtbps)) > 2
+thalachh_outliers_h <- abs(scale(dades_homes$thalachh)) > 2
+oldpeak_outliers_h <- abs(scale(dades_homes$oldpeak)) > 2
+
+outliers_homes <- trtbps_outliers_h + thalachh_outliers_h + oldpeak_outliers_h
+print(paste("Número d'outliers en homes:", count(dades_homes[outliers_homes > 0,])))
+```
+Podem extreure una primera conclusió sobre la importància de tractar les dades per separat donat que es reduix el número d'outliers. Tractar les dades conjuntament ens portaria a fer un tractament de les dades errònia i descartar registres o imputar valors de forma equivocada, a banda de que ens facilita una primera informació al respecte dels diferents valors observats en funció de si es tracta de dones o d'homes.
+
+Donat que no ens interessa perdre registres perquè en tenim pocs i ja que el criteri seguit per identificar valors perduts ha estat utilitzar la desviació estàndar, imputarem la mitjana als valors extrems identificats i ho farem de forma separada per homes i per dones
+```{r}
+dades_dones$trtbps[trtbps_outliers_d] <- round(mean(dades_dones$trtbps), 0)
+dades_dones$chol[chol_outliers_d] <- round(mean(dades_dones$chol), 0)
+dades_dones$thalachh[thalachh_outliers_d] <- round(mean(dades_dones$thalachh), 0)
+dades_dones$oldpeak[oldpeak_outliers_d] <- round(mean(dades_dones$oldpeak), 0)
+
+dades_homes$trtbps[trtbps_outliers_h] <- round(mean(dades_homes$trtbps), 0)
+dades_homes$thalachh[thalachh_outliers_h] <- round(mean(dades_homes$thalachh), 0)
+dades_homes$oldpeak[oldpeak_outliers_h] <- round(mean(dades_homes$oldpeak), 0)
+```
+
+```{r}
+
+aggr(dades_dones, numbers=TRUE, sortVars=TRUE, labels=names(dades_dones), cex.axis=.7, gap=3, ylab=c("Dades perdudes", "Patró"))
+
+##kNN 1 (VIM package)
+kNN1.imp<-kNN(iris.mis, k=3)
 ```
 
 # Anàlisi de les dades
