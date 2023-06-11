@@ -35,12 +35,13 @@ if(!require('Rmisc')) install.packages('Rmisc'); library('Rmisc')
 if(!require('dplyr')) install.packages('dplyr'); library('dplyr')
 if(!require('xfun')) install.packages('xfun'); library('xfun')
 if(!require('gridExtra')) install.packages("gridExtra"); library('gridExtra')
-if(!require('VIM')) install.packages("VIM"); library('VIM')
+if (!require('factoextra')) install.packages('factoextra'); library('factoextra')
+if (!require('corrplot')) install.packages('corrplot'); library('corrplot')
 ```
 
 # Presentació del projecte i objectiu de l'anàlisi
 
-El projecte que es desenvolupa a continuació consisteix en l'estudi de les causes que determinen la possibilitat una cardiopatia. En concret, es vol determinar si els diferents indicadors estudiats tenen una incidència diferent pels homes i les dones.
+El projecte que es desenvolupa a continuació consisteix en l'estudi de les causes que determinen la possibilitat de patir una cardiopatia. En concret, es vol determinar si els diferents indicadors estudiats tenen una incidència diferent pels homes i les dones.
 
 # Consideracions referents al dataset
 
@@ -75,59 +76,32 @@ conté dades decimals.
 \- **cp**. chest pain type Value (1: typical angina Value 2: atypical
 angina Value 3: non-anginal pain Value 4: asymptomatic)
 
-\- **trtbps**. Pressió arterial en repòr (en mm/Hg)
+\- **trtbps**. Pressió arterial en repòs (en mm/Hg)
 
-\- **chol**. cholestoral in mg/dl fetched via BMI sensor
+\- **chol**. Nivell de colesterol mesurat (en mg/dl)
 
-\- **fbs**. (fasting blood sugar \> 120 mg/dl) (1 = cert; 0 = fals)
+\- **fbs**. Nivell de sucre en sang en dejú (fasting blood sugar \> 120 mg/dl) (1: > 120 mg/dl; 0: =< 120 mg/dl)
 
 \- **restecg**. resting electrocardiographic results (0 = normal;
 1 = having ST-T wave abnormality (T wave inversions and/or ST
 elevation or depression of \> 0.05 mV); 2: showing probable or
 definite left ventricular hypertrophy by Estes' criteria)
 
-\- **thalachh**. maximum heart rate achieved
+\- **thalachh**. Freqüència cardiaca màxima assolida
 
-\- **exng**. exercise induced angina (1 = sí; 0 = no)
+\- **exng**. Angina induïda per exercici físic (1 = sí; 0 = no)
 
 \- **oldpeak**. Previous peak
 
 \- **slp**. Slope (0 = unsloping 1 = flat 2 = downsloping)
 
-\- **caa**. number of major vessels (0-4)
+\- **caa**. Número de vasos sanguinis principals amb obstrucció (0-4)
 
-\- **thall**. Thal rate (0 = null; 1 = fixed defect; 2 = normal; 3 =
+\- **thall**. Resultats d'una prova d'esforç amb tali (0 = null; 1 = fixed defect; 2 = normal; 3 =
 reversable defect)
 
-\- **output**. Target variable (0 = less chance of heart attack (< 50% diameter narrowing. less chance of
-heart disease); 1= more
-chance of heart attack (> 50% diameter narrowing. more chance of heart disease))
-
-Extra (incorporar)
-\- **Medical Definitions 1- Angina: chest pain due to
-reduced blood flow to the heart muscles. There're 3 types of angina:
-stable angina, unstable angina, and variant angina. To know more about
-angina click here:
-<https://www.nhs.uk/conditions/angina/#>:\~:text=Angina%20is%20chest%20pain%20caused,of%20these%20more%20serious%20problems.
-
-2- Cholesterol: a waxy substance found in the body cells and it belongs
-to a group of organic molecules called lipids. There are 3 types of
-cholesterol; high-density lipoprotein (HDL) and it's known as the "good
-cholesterol", low-density lipoprotein (LDL) known as the "bad
-cholesterol", and very-low-density lipoproteins (VLDL) and as the name
-implies, they're low dense particles that carry triglycerides in the
-blood.
-
-3- ECG: short for electrocardiogram, it's a routine test usually done to
-check the heart's electrical activity.
-
-4- ST depression: a type of ST-segment abnormality. the ST segment is
-the flat, isoelectric part of the ECG and it represents the interval
-between ventricular depolarization and repolarization. For more details
-check this link: <https://litfl.com/st-segment-ecg-library/>.
-
-5- Thalassemia: it's a genetic blood disorder that is characterized by a
-lower rate of hemoglobin than normal.
+\- **output**. Variable objectiu (0 = menys possibilitats de partir una cardiopatia (< 50% diameter narrowing. less chance of
+heart disease); 1= més possiblitats de patir una cardiopatia (> 50% diameter narrowing. more chance of heart disease))
 
 
 # Integració i selecció de les dades d'interès a analitzar.
@@ -159,6 +133,12 @@ Hi ha més informació d'homes que de dones i el número de registres amb output
 
 Observant les gràfiques, veiem que hi ha quatre variables que podrien tenir una distribució similar a una normal (age, chol, trtbps i thalachh). En tot cas, més endavant farem una comprovació adhoc per tal d'assegurar-ho.
 
+Modificarem els valors de la variable sex per facilitar la seva interpretació
+```{r}
+dades$sex[dades$sex == 1] <- "Home"
+dades$sex[dades$sex == 0] <- "Dona"
+```
+
 Revisem si tenim registres amb identics valors a totes les variables per tal de valorar si tenim registres duplicats
 ```{r}
 dim(unique(dades))
@@ -184,20 +164,9 @@ print(round(prop.table(table(dades$sex, dades$output), 1), 2))
 ```
 Hi ha 207 homes i 96 dones i la distribució del camp output dins de cada grup és diferent, tenint més pes el valor 1 en dones que en homes.
 ```{r}
-barplot(table(dades$sex, dades$output), beside = TRUE, col = c("grey", "black"), legend = rownames(table(dades$sex, dades$output)))
+grafic <- barplot(table(dades$output, dades$sex), beside = TRUE, col = c("grey", "black"), legend = FALSE)
+legend("topright", legend = c("menys risc", "més risc"), fill = c("grey", "black"), x = max(grafic), y = max(grafic) + 120, xpd = TRUE, bty = "n")
 ```
-
-
-Farem una anàlisi de components principals per tal valorar si podem
-treballar amb menys variables
-```{r}
-dades_acp <- prcomp(dades, center = TRUE, scale = TRUE)
-summary(dades_acp)
-```
-
-Observem que, tot i que hi ha dues compronents principals que expliquen
-juntes un 34,9% per la variància, aquesta està molt repartida i
-necessitem 13 dels 14 components per explicar el 95% de la variància.
 
 
 
@@ -250,14 +219,13 @@ colSums(is.na(dades))
 colSums(dades=="")
 ```
 
-Es confirma que no tenim valors perduts, per tant no em de fer cap
-modificació al dataset.
+Es confirma que no tenim valors perduts, per tant no em de fer cap modificació al dataset.
 
-Fem una revisió de la possible existència de valors extrems
+Fem una revisió de la possible existència de valors extrems de forma global
 
 ```{r}
 var_out <- c()
-for (i in 1:ncol(dades)){
+for (i in c(1,3:ncol(dades))){
   outl <- boxplot.stats(dades[,i])$out
   if (!length(outl)==0){var_out <- c(var_out, i)}
 }
@@ -298,18 +266,18 @@ plot(dades[, c("thalachh", "oldpeak")], pch=pch_thalachh_oldpeak)
 ```
 Donat que l'estudi es basa en la comparació entre homes i dones, fe una valoració dels valors extrems per separat, per tal d'evitar que els valors d'un sexe amaguin informació rellevant a l'altra
 ```{r}
-dades_homes <- dades[dades$sex==1,]
-dades_dones <- dades[dades$sex==0,]
+dades_homes <- dades[dades$sex=="Home",]
+dades_dones <- dades[dades$sex=="Dona",]
 
 var_out_dones <- c()
-for (i in 1:ncol(dades_dones)){
+for (i in c(1,3:ncol(dades))){
   outl_dones <- boxplot.stats(dades_dones[,i])$out
   if (!length(outl_dones)==0){var_out_dones <- c(var_out_dones, i)}
 }
 print(names(dades_dones)[var_out_dones])
 
 var_out_homes <- c()
-for (i in 1:ncol(dades_homes)){
+for (i in c(1,3:ncol(dades))){
   outl_homes <- boxplot.stats(dades_homes[,i])$out
   if (!length(outl_homes)==0){var_out_homes <- c(var_out_homes, i)}
 }
@@ -317,11 +285,11 @@ print(names(dades_homes)[var_out_homes])
 ```
 Així com en l'estudi conjunt trobavem valors extrems a les variables trtbps, chol,  thalachh i oldpeak, quan estudiem els sexes per separat varien aquests resultats. Per les dones no hi ha variació en quant a variables, donat que la variable exng en ser discreta no la podem considerar, i pels homes no hi haurà valors extrems per la variable chol.
 
-Revisem els registres que contenen valors extrems amb el criteri de les dues desviacions estàndar i comptem quants registres es veuen afectats per outliers, considerant les dades de forma global i separant per sexes 
+Revisem els registres que contenen valors extrems considerant dues desviacions estàndar i comptem quants registres es veuen afectats per outliers, considerant les dades de forma global i separant per sexes 
 ```{r}
 print(paste("Número d'outliers considerant les dades de forma global:", count(dades[outliers > 0,])))
-print(paste("Número d'outliers en dones considerant les dades de forma global:", count(dades[c(outliers > 0 & dades$sex==0),])))
-print(paste("Número d'outliers en homes considerant les dades de forma global:", count(dades[c(outliers > 0 & dades$sex==1),])))
+print(paste("Número d'outliers en dones considerant les dades de forma global:", count(dades[c(outliers > 0 & dades$sex=="Dona"),])))
+print(paste("Número d'outliers en homes considerant les dades de forma global:", count(dades[c(outliers > 0 & dades$sex=="Home"),])))
 
 trtbps_outliers_d <- abs(scale(dades_dones$trtbps)) > 2
 chol_outliers_d <- abs(scale(dades_dones$chol)) > 2
@@ -338,33 +306,58 @@ oldpeak_outliers_h <- abs(scale(dades_homes$oldpeak)) > 2
 outliers_homes <- trtbps_outliers_h + thalachh_outliers_h + oldpeak_outliers_h
 print(paste("Número d'outliers en homes:", count(dades_homes[outliers_homes > 0,])))
 ```
-Podem extreure una primera conclusió sobre la importància de tractar les dades per separat donat que es reduix el número d'outliers. Tractar les dades conjuntament ens portaria a fer un tractament de les dades errònia i descartar registres o imputar valors de forma equivocada, a banda de que ens facilita una primera informació al respecte dels diferents valors observats en funció de si es tracta de dones o d'homes.
+Podem extreure una primera conclusió sobre la importància de tractar les dades per separat donat que es reduix el número d'outliers. Tractar les dades conjuntament implicaria fer un tractament de les dades errònia i descartar registres o imputar valors de forma equivocada, a banda de que ens facilita una primera informació al respecte dels diferents valors observats en funció de si es tracta de dones o d'homes.
 
-Donat que no ens interessa perdre registres perquè en tenim pocs i ja que el criteri seguit per identificar valors perduts ha estat utilitzar la desviació estàndar, imputarem la mitjana als valors extrems identificats i ho farem de forma separada per homes i per dones
-```{r}
-dades_dones$trtbps[trtbps_outliers_d] <- round(mean(dades_dones$trtbps), 0)
-dades_dones$chol[chol_outliers_d] <- round(mean(dades_dones$chol), 0)
-dades_dones$thalachh[thalachh_outliers_d] <- round(mean(dades_dones$thalachh), 0)
-dades_dones$oldpeak[oldpeak_outliers_d] <- round(mean(dades_dones$oldpeak), 0)
+Per tal de decidir si realment els valors trobats són erronis cal tenir un coneixement ampli del tipus de dades i de si els valors que estem identificant són relament erronis. Per altra banda, amb una mostra de 302 registres si 41 tenen dades errònies, hauríem de considerar que hi ha hagut massa errors en la recolecció de les dades i la mostra no és gaire útil. Per tant, considerarem que valors detectats són correctes i continuarem l'anàlisi sense imputar nous valors, tenint present que aquest és un exercici teòric i que en un cas real hauríem de consultar amb els experts per tal de validar quin és el tractament correcte.
 
-dades_homes$trtbps[trtbps_outliers_h] <- round(mean(dades_homes$trtbps), 0)
-dades_homes$thalachh[thalachh_outliers_h] <- round(mean(dades_homes$thalachh), 0)
-dades_homes$oldpeak[oldpeak_outliers_h] <- round(mean(dades_homes$oldpeak), 0)
-```
-
-```{r}
-
-aggr(dades_dones, numbers=TRUE, sortVars=TRUE, labels=names(dades_dones), cex.axis=.7, gap=3, ylab=c("Dades perdudes", "Patró"))
-
-##kNN 1 (VIM package)
-kNN1.imp<-kNN(iris.mis, k=3)
-```
 
 # Anàlisi de les dades
 
-Selecció dels grups de dades que es volen analitzar/comparar (p. e., si
-es volen comparar grups de dades, quins són aquests grups i quins tipus
-d'anàlisi s'aplicaran?).
+Selecció dels grups de dades que es volen analitzar/comparar (p. e., si es volen comparar grups de dades, quins són aquests grups i quins tipus d'anàlisi s'aplicaran?).
+
+Com ja s'ha comentat, l'objectiu de l'estudi és la comparació de les dades existents entre homes i dones per tal de valorar la diferent incidència que puguin tenir els resultats de les proves en el fet de patir una cardiopatia.
+
+Ja hem vist que el tractament diferenciat ens porta a detectar valors extrems diferents en el cas d'homes i de dones. 
+```{r}
+dades_acp_dones <- prcomp(dades_dones[,c(1,3:ncol(dades_dones))], center = TRUE, scale = TRUE)
+print("ACP dones:")
+summary(dades_acp_dones)
+```
+```{r}
+ev = get_eig(dades_acp_dones); ev
+```
+
+
+
+```{r}
+dades_acp_homes <- prcomp(dades_homes[,c(1,3:ncol(dades_homes))], center = TRUE, scale = TRUE)
+print("ACP homes:")
+summary(dades_acp_homes)
+```
+S'aprecia una diferència entre el resultat pels homes i per les dones, sent força significativa la diferència de la primera component principal, amb un valor un de quasi un 4% més per les dones.
+
+En quan a la interpretació del resultat, er les dones les dues primeres components principals expliquen el 40,81% de la variància, mentre que pels homes acumulen 36,68%, però la participació de les diferents components principals està força repartida, necessitant fins 9 per les dones i 10 pels homes per arribar al 90%.
+
+Com a criteri de selecció considerarem les components amb una variància superior a 1
+```{r}
+var_dades_acp_dones <- dades_acp_dones$sdev ^ 2
+print(var_dades_acp_dones)
+var_dades_acp_homes <- dades_acp_homes$sdev ^ 2
+print(var_dades_acp_homes)
+```
+Per tant, considerarem les 5 primeres per les dones i les 4 primeres pels homes. De totes maneres, revisarem la importància de cada variable a les 5 primeres components principals diferenciant per sexes
+
+```{r}
+var_dones <- get_pca_var(dades_acp_dones)
+var_homes <- get_pca_var(dades_acp_homes)
+
+par(mfrow = c(1,2))
+corrplot(var_dones$contrib[,1:5], is.corr=FALSE)
+corrplot(var_dones$contrib[,1:5], is.corr=FALSE)
+```
+
+De forma visual es pot apreciar que no hi ha diferències en quant a la importància de cada variable en la contribució a les 5 primeres components principals.
+
 
 Comprovació de la normalitat i homogeneïtat de la variància.
 
