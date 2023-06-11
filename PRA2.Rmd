@@ -164,8 +164,15 @@ print(round(prop.table(table(dades$sex, dades$output), 1), 2))
 ```
 Hi ha 207 homes i 96 dones i la distribució del camp output dins de cada grup és diferent, tenint més pes el valor 1 en dones que en homes.
 ```{r}
-grafic <- barplot(table(dades$output, dades$sex), beside = TRUE, col = c("grey", "black"), legend = FALSE)
-legend("topright", legend = c("menys risc", "més risc"), fill = c("grey", "black"), x = max(grafic), y = max(grafic) + 120, xpd = TRUE, bty = "n")
+grafic <- barplot(table(dades$output, dades$sex),
+                  beside = TRUE,
+                  col = c("grey", "black"), legend = FALSE)
+legend("topright", legend = c("menys risc", "més risc"),
+       fill = c("grey", "black"),
+       x = max(grafic),
+       y = max(grafic) + 120,
+       xpd = TRUE,
+       bty = "n")
 ```
 
 
@@ -203,7 +210,10 @@ hipòtesi nul·la i, per tant, no es distribueixen com una normal.
 
 ELIMINAR O COMENTAR
 ```{r}
-hist(table(dades$chol, dades$output), col = c("grey", "black"), legend = rownames(table(dades$chol, dades$output)), xlab = "chol")
+hist(table(dades$chol, dades$output),
+     col = c("grey", "black"),
+     legend = rownames(table(dades$chol, dades$output)),
+     xlab = "chol")
 ```
 
 # Neteja de les dades. Les dades contenen zeros o elements buits?
@@ -287,9 +297,12 @@ Així com en l'estudi conjunt trobavem valors extrems a les variables trtbps, ch
 
 Revisem els registres que contenen valors extrems considerant dues desviacions estàndar i comptem quants registres es veuen afectats per outliers, considerant les dades de forma global i separant per sexes 
 ```{r}
-print(paste("Número d'outliers considerant les dades de forma global:", count(dades[outliers > 0,])))
-print(paste("Número d'outliers en dones considerant les dades de forma global:", count(dades[c(outliers > 0 & dades$sex=="Dona"),])))
-print(paste("Número d'outliers en homes considerant les dades de forma global:", count(dades[c(outliers > 0 & dades$sex=="Home"),])))
+print(paste("Número d'outliers considerant les dades de forma global:",
+            count(dades[outliers > 0,])))
+print(paste("Número d'outliers en dones considerant les dades de forma global:",
+            count(dades[c(outliers > 0 & dades$sex=="Dona"),])))
+print(paste("Número d'outliers en homes considerant les dades de forma global:",
+            count(dades[c(outliers > 0 & dades$sex=="Home"),])))
 
 trtbps_outliers_d <- abs(scale(dades_dones$trtbps)) > 2
 chol_outliers_d <- abs(scale(dades_dones$chol)) > 2
@@ -353,10 +366,10 @@ var_homes <- get_pca_var(dades_acp_homes)
 
 par(mfrow = c(1,2))
 corrplot(var_dones$contrib[,1:5], is.corr=FALSE)
-corrplot(var_dones$contrib[,1:5], is.corr=FALSE)
+corrplot(var_homes$contrib[,1:5], is.corr=FALSE)
 ```
 
-De forma visual es pot apreciar que no hi ha diferències en quant a la importància de cada variable en la contribució a les 5 primeres components principals.
+De forma visual es pot apreciar que hi ha diferències en quant a la importància de cada variable en la contribució a les 5 primeres components principals, per tant podem considerar que a l'hora de seleccionar les variables a estudiar serà important diferenciar entre els dos sexes. 
 
 
 Comprovació de la normalitat i homogeneïtat de la variància.
