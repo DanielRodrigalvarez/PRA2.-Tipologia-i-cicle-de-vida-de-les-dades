@@ -52,7 +52,9 @@ Les dades han estat publicades per Rashik Rahman sota llicència CC0: Public Dom
 No s'han realitzat modificacions prèvies al conjunt de dades original.
 
 
-# Descripció del dataset. Perquè és important i quina pregunta/problema pretén respondre?
+# Descripció del dataset
+
+### Perquè és important i quina pregunta/problema pretén respondre?
 
 Carreguem el conjunt de dades i fem una revisió del contingut de les
 diferents variables
@@ -67,7 +69,7 @@ Podem observar que es tracta d'un dataset amb 303 observacions i 14
 variables, totes elles amb números enters excepte la variable oldpeak que
 conté dades decimals.
 
-## Descripció de les variables
+Descripció de les variables
 
 \- **age**. Edat de la persona 
 
@@ -104,7 +106,7 @@ reversable defect)
 heart disease); 1= més possiblitats de patir una cardiopatia (> 50% diameter narrowing. more chance of heart disease))
 
 
-# Integració i selecció de les dades d'interès a analitzar.
+# Integració i selecció de les dades d'interès a analitzar. Pot ser el resultat d’addicionar diferents datasets o una subselecció útil de les dades originals, en base a l’objectiu que es vulgui aconseguir.
 
 Revisem la distribució de les diferents variables
 ```{r}
@@ -175,51 +177,11 @@ legend("topright", legend = c("menys risc", "més risc"),
        bty = "n")
 ```
 
-
-
-### Normalització de les dades
-
-Tenim quatre variables numèriques que ens pot interessar normalitzar per
-tal que siguin comparables en el nostre estudi. Primer de tot,
-comprovarem si la distribució de les variables trtbps, chol, thalachh i
-oldpeak és o no normal aplicant el test de Shapiro
-
-```{r}
-shapiro_trtbps <- shapiro.test(dades$trtbps)
-print(shapiro_trtbps)
-```
-
-```{r}
-shapiro_chol <- shapiro.test(dades$chol)
-print(shapiro_chol)
-```
-
-```{r}
-shapiro_thalachh <- shapiro.test(dades$thalachh)
-print(shapiro_thalachh)
-```
-
-```{r}
-shapiro_oldpeak <- shapiro.test(dades$oldpeak)
-print(shapiro_oldpeak)
-```
-
-En els quatre casos, observant el valor de p podem dir que es rebutja la
-hipòtesi nul·la i, per tant, no es distribueixen com una normal.
-
-
-ELIMINAR O COMENTAR
-```{r}
-hist(table(dades$chol, dades$output),
-     col = c("grey", "black"),
-     legend = rownames(table(dades$chol, dades$output)),
-     xlab = "chol")
-```
-
 # Neteja de les dades. Les dades contenen zeros o elements buits?
 
-Tot i que amb el resum del dataset no apareixien valors perduts, fem una
-adhoc
+### Les dades contenen zeros o elements buits? Gestiona cadascun d'aquests casos
+
+Tot i que amb el resum del dataset no apareixien valors perduts, fem una adhoc
 
 ```{r}
 colSums(is.na(dades))
@@ -230,6 +192,9 @@ colSums(dades=="")
 ```
 
 Es confirma que no tenim valors perduts, per tant no em de fer cap modificació al dataset.
+
+
+### Identifica i gestiona els valors extrems
 
 Fem una revisió de la possible existència de valors extrems de forma global
 
@@ -326,7 +291,7 @@ Per tal de decidir si realment els valors trobats són erronis cal tenir un cone
 
 # Anàlisi de les dades
 
-Selecció dels grups de dades que es volen analitzar/comparar (p. e., si es volen comparar grups de dades, quins són aquests grups i quins tipus d'anàlisi s'aplicaran?).
+### Selecció dels grups de dades que es volen analitzar/comparar (p. e., si es volen comparar grups de dades, quins són aquests grups i quins tipus d'anàlisi s'aplicaran?).
 
 Com ja s'ha comentat, l'objectiu de l'estudi és la comparació de les dades existents entre homes i dones per tal de valorar la diferent incidència que puguin tenir els resultats de les proves en el fet de patir una cardiopatia.
 
@@ -336,11 +301,6 @@ dades_acp_dones <- prcomp(dades_dones[,c(1,3:ncol(dades_dones))], center = TRUE,
 print("ACP dones:")
 summary(dades_acp_dones)
 ```
-```{r}
-ev = get_eig(dades_acp_dones); ev
-```
-
-
 
 ```{r}
 dades_acp_homes <- prcomp(dades_homes[,c(1,3:ncol(dades_homes))], center = TRUE, scale = TRUE)
@@ -372,12 +332,41 @@ corrplot(var_homes$contrib[,1:5], is.corr=FALSE)
 De forma visual es pot apreciar que hi ha diferències en quant a la importància de cada variable en la contribució a les 5 primeres components principals, per tant podem considerar que a l'hora de seleccionar les variables a estudiar serà important diferenciar entre els dos sexes. 
 
 
-Comprovació de la normalitat i homogeneïtat de la variància.
+### Comprovació de la normalitat i homogeneïtat de la variància.
 
-Aplicació de proves estadístiques per comparar els grups de dades. En
-funció de les dades i de l'objectiu de l'estudi, aplicar proves de
-contrast d'hipòtesis, correlacions, regressions, etc. Aplicar almenys
-tres mètodes d'anàlisi diferents.
+Tenim quatre variables contínues que ens pot interessar normalitzar per
+tal que siguin comparables en el nostre estudi. Primer de tot,
+comprovarem si la distribució de les variables trtbps, chol, thalachh i
+oldpeak és o no normal aplicant el test de Shapiro
+
+```{r}
+shapiro_trtbps <- shapiro.test(dades$trtbps)
+print(shapiro_trtbps)
+```
+
+```{r}
+shapiro_chol <- shapiro.test(dades$chol)
+print(shapiro_chol)
+```
+
+```{r}
+shapiro_thalachh <- shapiro.test(dades$thalachh)
+print(shapiro_thalachh)
+```
+
+```{r}
+shapiro_oldpeak <- shapiro.test(dades$oldpeak)
+print(shapiro_oldpeak)
+```
+
+En els quatre casos, observant el valor de p podem dir que es rebutja la
+hipòtesi nul·la i, per tant, no es distribueixen com una normal.
+
+
+### Aplicació de proves estadístiques per comparar els grups de dades. En funció de les dades i de l'objectiu de l'estudi, aplicar proves de contrast d'hipòtesis, correlacions, regressions, etc. Aplicar almenys tres mètodes d'anàlisi diferents.
+
+
+
 
 # Conclusions
 
