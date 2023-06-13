@@ -329,8 +329,10 @@ var_dones <- get_pca_var(dades_acp_dones)
 var_homes <- get_pca_var(dades_acp_homes)
 
 par(mfrow = c(1,2))
+
 corrplot(var_dones$contrib[,1:5], is.corr=FALSE)
 corrplot(var_homes$contrib[,1:5], is.corr=FALSE)
+title(main="Dones vs Homes", outer = TRUE, line = -1)
 ```
 
 De forma visual es pot apreciar que hi ha diferències en quant a la importància de cada variable en la contribució a les 5 primeres components principals, per tant podem considerar que a l'hora de seleccionar les variables a estudiar serà important diferenciar entre els dos sexes. 
@@ -378,12 +380,19 @@ Segons els resultats obtingut podem concloure que oldpeak, chol i thalachh tenen
 
 ## Aplicació de proves estadístiques per comparar els grups de dades. En funció de les dades i de l'objectiu de l'estudi, aplicar proves de contrast d'hipòtesis, correlacions, regressions, etc. Aplicar almenys tres mètodes d'anàlisi diferents.
 
+En base a l'estudi de components principals realitzats prèviament, considerarem les següents variables: oldpeak, age i chol, per la incidència que tenen en el grup de dones, i thalachh,trtbps, fbs, per la incidència que tenen en el grup d'homes.
+
 Donat que hem considerat que les variables contínues no segueixen una distribució normal, utilitzarem test no paramètrics per aquests variables.
 
-```{r}
+Considerem que els grups dades separats per sexe són independents per la qual cosa aplicarem el test Mann-Whitney per comparar les distribucions
 
+```{r}
+#wilcox.test()
 ```
 
+```{r}
+#chisq.test() para variables discretas
+```
 
 
 # Conclusions
