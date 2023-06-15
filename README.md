@@ -9,7 +9,7 @@ Però el Daniel Curulla no ha pogut participar en l'elaboració de la pràctica.
 
 Al directori principal del repositori es poden trobar, a part d'aquest arxiu readme, els següents documents:
 - **PRA2.pdf**. Conté les resposta a les preguntes plantejades a la pràctica
-- **licence**. Document amb el detall de la llicència sota la que es desenvolupa el projecte
+- **license**. Document amb el detall de la llicència sota la que es desenvolupa el projecte
 
 Al directori dataset es pot trobar el següent document:
 - **dades.csv**. Fitxer de dades originals utilitzades
