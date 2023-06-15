@@ -225,21 +225,10 @@ thalachh_outliers <- abs(scale(dades$thalachh)) > 2
 oldpeak_outliers <- abs(scale(dades$oldpeak)) > 2
 
 outliers <- trtbps_outliers + chol_outliers + thalachh_outliers + oldpeak_outliers
-
-pch_trtbps_chol <- (trtbps_outliers | chol_outliers) * 3
-pch_trtbps_thalachh <- (trtbps_outliers | thalachh_outliers) * 3
-pch_trtbps_oldpeak <- (trtbps_outliers | oldpeak_outliers) * 3
-pch_chol_thalachh <- (chol_outliers | thalachh_outliers) * 3
-pch_chol_oldpeak <- (chol_outliers | oldpeak_outliers) * 3
-pch_thalachh_oldpeak <- (thalachh_outliers | oldpeak_outliers) * 3
-
-plot(dades[, c("trtbps", "chol")], pch=pch_trtbps_chol)
-plot(dades[, c("trtbps", "thalachh")], pch=pch_trtbps_thalachh)
-plot(dades[, c("trtbps", "oldpeak")], pch=pch_trtbps_oldpeak)
-plot(dades[, c("chol", "thalachh")], pch=pch_chol_thalachh)
-plot(dades[, c("trtbps", "oldpeak")], pch=pch_trtbps_oldpeak)
-plot(dades[, c("thalachh", "oldpeak")], pch=pch_thalachh_oldpeak)
+print(paste("Número d'outliers considerant les dades de forma global:",
+            count(dades[outliers > 0,])))
 ```
+
 Donat que l'estudi es basa en la comparació entre homes i dones, fe una valoració dels valors extrems per separat, per tal d'evitar que els valors d'un sexe amaguin informació rellevant a l'altra
 ```{r}
 dades_homes <- dades[dades$sex=="Home",]
@@ -375,23 +364,60 @@ fligner.test(age ~ sex, data = dades)
 fligner.test(chol ~ sex, data = dades)
 fligner.test(thalachh ~ sex, data = dades)
 ```
-Segons els resultats obtingut podem concloure que oldpeak, chol i thalachh tenen variàncies estadísticament diferents per cada sexe i age i trtbps tenen variànces estadísticamente iguals per cada sexe.
+Segons els resultats obtingut podem concloure que oldpeak, chol i thalachh tenen variàncies estadísticament diferents per cada sexe mentre que age i trtbps tenen variànces estadísticamente iguals per cada sexe.
 
 
 ## Aplicació de proves estadístiques per comparar els grups de dades. En funció de les dades i de l'objectiu de l'estudi, aplicar proves de contrast d'hipòtesis, correlacions, regressions, etc. Aplicar almenys tres mètodes d'anàlisi diferents.
 
-En base a l'estudi de components principals realitzats prèviament, considerarem les següents variables: oldpeak, age i chol, per la incidència que tenen en el grup de dones, i thalachh,trtbps, fbs, per la incidència que tenen en el grup d'homes.
+En base a l'estudi de components principals realitzats prèviament, considerarem les següents variables: oldpeak, age i chol, per la incidència que tenen en el grup de dones, i thalachh, trtbps i fbs, per la incidència que tenen en el grup d'homes. A més considerarem la variable output.
+
 
 Donat que hem considerat que les variables contínues no segueixen una distribució normal, utilitzarem test no paramètrics per aquests variables.
 
 Considerem que els grups dades separats per sexe són independents per la qual cosa aplicarem el test Mann-Whitney per comparar les distribucions
 
 ```{r}
-#wilcox.test()
+wilcox.test(oldpeak ~ sex, data = dades)
+wilcox.test(age ~ sex, data = dades)
+wilcox.test(chol ~ sex, data = dades)
+wilcox.test(thalachh ~ sex, data = dades)
+wilcox.test(trtbps ~ sex, data = dades)
 ```
+Donat que obtenim una p-valor inferior al 0,05 per chol podem concloure que aquesta variable té diferències estadísticament significatives per cada sexe, mentre que a les altres quatre variables contínues no.
+
+Apliquem el test chi-quadrat a la variable discreta fbs
+```{r}
+chisq.test(table(dades[, c("sex", "fbs")]))
+```
+Podem concloure que no hi ha diferències significatives en la variable fbs per sexes.
 
 ```{r}
-#chisq.test() para variables discretas
+chisq.test(table(dades[, c("sex", "output")]))
+```
+En aquest cas sí s'aprecien diferències significatives, la qual cosa és especialment rellevant pel nostre estudi, sempre i quan considerem que la mostra es suficientment representativa de la població.
+
+
+Observem les relacions entre les diferents variables contínues per tal valorar si hi pot haver correlació entre elles que ens permeti generar un model de regressió lineal.
+```{r}
+plot(dades[, c("oldpeak", "age", "chol", "thalachh", "trtbps")])
+```
+A priori, sembla que hi podria haver una certa relació entre age i chol i també entre age i thalachh
+```{r}
+age_chol <- lm(age ~ chol, dades)
+summary(age_chol)
+```
+```{r}
+age_thalachh <- lm(age ~ thalachh, dades)
+summary(age_thalachh)
+```
+Com podem observar en el resultats, la correlació entre els dos parells de variables és feble. 
+
+Donat que hem considerat sis variables com a més significatives per l'estudi, calcularem la correlació existent entre les cinc d'aquestes que són contínues i output per valorar el nivell de correlació existent
+```{r}
+cor(dades[, c("oldpeak", "age", "chol", "thalachh", "trtbps", "output")], method = "spearman")
+```
+```{r, warning=FALSE}
+cor.test(dades$oldpeak, dades$output, method = "spearman")
 ```
 
 
@@ -400,3 +426,14 @@ Considerem que els grups dades separats per sexe són independents per la qual c
 A partir dels resultats obtinguts, quines són les conclusions?
 
 Els resultats permeten respondre al problema?
+
+
+# Taula de contribucions
+
+| Contribucions               | Signatura                     |
+|-----------------------------|-------------------------------|
+| Investigació prèvia         | Daniel Rodrigálvarez Morente  |
+| Redacció de les respostes   | Daniel Rodrigálvarez Morente  |
+| Desenvolupament             | Daniel Rodrigálvarez Morente  |
+| Participació al vídeo       | Daniel Rodrigálvarez Morente  |
+
