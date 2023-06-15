@@ -12,7 +12,7 @@ Al directori principal del repositori es poden trobar, a part d'aquest arxiu rea
 - **license**. Document amb el detall de la llicència sota la que es desenvolupa el projecte
 
 Al directori dataset es pot trobar el següent document:
-- **dades.csv**. Fitxer de dades originals utilitzades
+- **heart.csv**. Fitxer de dades originals utilitzades
 
 Al directori codi es pot trobar el següent document:
 - **PRA2.rmd**. Conté el codi utilitzat per generar el document PRA2.pdf
