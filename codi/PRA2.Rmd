@@ -1,7 +1,7 @@
 ---
 title: "PRA2. Tipologia i cicle de vida de les dades"
 author: "Autor: Daniel Rodrigálvarez Morente"
-date: "Maig 2023"
+date: "Juny de 2023"
 output: 
   pdf_document:
     toc: true
@@ -42,33 +42,27 @@ if(!require('car')) install.packages('car'); library('car')
 
 # Presentació del projecte i objectiu de l'anàlisi
 
-El projecte que es desenvolupa a continuació consisteix en l'estudi de les causes que determinen la possibilitat de patir una cardiopatia. En concret, es vol determinar si els diferents indicadors estudiats tenen una incidència diferent pels homes i les dones.
+El projecte que es desenvolupa a continuació consisteix en l'estudi de les causes que determinen la probabilitat de patir una cardiopatia, per tal de identificar si posteriors estudis han de tractar de forma separada a homes i dones.
 
-# Consideracions referents al dataset
 
+# Descripció del dataset
+
+## Perquè és important i quina pregunta/problema pretén respondre?
 El dataset utilitzat conté informació de diferents indicadors mèdics de persones que han patit o no una cardiopatia.
 
 Les dades han estat publicades per Rashik Rahman sota llicència CC0: Public Domain a www.kaggle.com i es pot accedir a les mateixes a través del següent enllaç: https://www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset
 
 No s'han realitzat modificacions prèvies al conjunt de dades original.
 
+Carreguem el conjunt de dades i fem una revisió del contingut de les diferents variables
 
-# Descripció del dataset
-
-## Perquè és important i quina pregunta/problema pretén respondre?
-
-Carreguem el conjunt de dades i fem una revisió del contingut de les
-diferents variables
-
-```{r}
+```{r, echo = FALSE, results = 'show'}
 path = 'heart.csv'
 dades <- read.csv(path, sep = ",")
 str(dades)
 ```
 
-Podem observar que es tracta d'un dataset amb 303 observacions i 14
-variables, totes elles amb números enters excepte la variable oldpeak que
-conté dades decimals.
+Podem observar que es tracta d'un dataset amb 303 observacions i 14 variables, totes elles amb números enters excepte la variable oldpeak que conté dades decimals.
 
 Descripció de les variables
 
@@ -76,8 +70,7 @@ Descripció de les variables
 
 \- **sex**. Sexe de la persona (1 = home; 0 = dona)
 
-\- **cp**. chest pain type Value (1: typical angina Value 2: atypical
-angina Value 3: non-anginal pain Value 4: asymptomatic)
+\- **cp**. Mal al tòrax (1: angina de pit amb valor típic; 2: angina de pit amb valor atípic 3: dolor no anginós; 4: assimptomàtic)
 
 \- **trtbps**. Pressió arterial en repòs (en mm/Hg)
 
@@ -85,38 +78,35 @@ angina Value 3: non-anginal pain Value 4: asymptomatic)
 
 \- **fbs**. Nivell de sucre en sang en dejú (fasting blood sugar \> 120 mg/dl) (1: > 120 mg/dl; 0: =< 120 mg/dl)
 
-\- **restecg**. resting electrocardiographic results (0 = normal;
-1 = having ST-T wave abnormality (T wave inversions and/or ST
-elevation or depression of \> 0.05 mV); 2: showing probable or
-definite left ventricular hypertrophy by Estes' criteria)
+\- **restecg**. resultat de l'electrocardiograma en repòs (0 = normal;
+1 = anomalia de l'ona ST-T (inversions de l'ona T i/o elevació o depressió del ST de > 0.05 mV); 2: hipertròfia ventricular esquerra probable o hipertròfia ventricular esquerra segons els criteris d'Estes)
 
 \- **thalachh**. Freqüència cardiaca màxima assolida
 
 \- **exng**. Angina induïda per exercici físic (1 = sí; 0 = no)
 
-\- **oldpeak**. Previous peak
+\- **oldpeak**. Pics previs
 
-\- **slp**. Slope (0 = unsloping 1 = flat 2 = downsloping)
+\- **slp**. Pendent (0 = sense pendent; 1 = pla; 2 = pendent descendent)
 
 \- **caa**. Número de vasos sanguinis principals amb obstrucció (0-4)
 
 \- **thall**. Resultats d'una prova d'esforç amb tali (0 = null; 1 = fixed defect; 2 = normal; 3 =
 reversable defect)
 
-\- **output**. Variable objectiu (0 = menys possibilitats de partir una cardiopatia (< 50% diameter narrowing. less chance of
-heart disease); 1= més possiblitats de patir una cardiopatia (> 50% diameter narrowing. more chance of heart disease))
+\- **output**. Variable objectiu (0 = menys possibilitats de partir una cardiopatia; 1= més possiblitats de patir una cardiopatia)
 
 
 # Integració i selecció de les dades d'interès a analitzar. Pot ser el resultat d’addicionar diferents datasets o una subselecció útil de les dades originals, en base a l’objectiu que es vulgui aconseguir.
 
 Revisem la distribució de les diferents variables
-```{r}
+```{r, echo = FALSE, results = 'show'}
 summary(dades)
 ```
 A priori, no observem que hi hagi valor perduts, però més endevant farem una comprovació adhoc.
 
 Fem una representació de les diferents variables per tal de facilitar la revisió prèvia del dataset
-```{r, warning=FALSE}
+```{r, warning=FALSE, echo = FALSE, results = 'show'}
 histogrames_num <- list()
 variables_num <- names(dades)
 dades_num <- dades %>% select(all_of(variables_num))
@@ -134,30 +124,27 @@ multiplot(plotlist = histogrames_num, cols = 4)
 ```
 Hi ha més informació d'homes que de dones i el número de registres amb output igual a 1 és lleugerament superior al valor 0.
 
-Observant les gràfiques, veiem que hi ha quatre variables que podrien tenir una distribució similar a una normal (age, chol, trtbps i thalachh). En tot cas, més endavant farem una comprovació adhoc per tal d'assegurar-ho.
+Observant les gràfiques, veiem que hi ha quatre variables que podrien tenir una distribució similar a una normal (age, chol, trtbps i thalachh), la qual cosa revisarem en un punt posterior de l'estudi.
 
-Modificarem els valors de la variable sex per facilitar la seva interpretació
-```{r}
+Modifiquem els valors de la variable sex per facilitar la seva interpretació
+```{r, echo = FALSE, results = 'show'}
 dades$sex[dades$sex == 1] <- "Home"
 dades$sex[dades$sex == 0] <- "Dona"
 ```
 
-Revisem si tenim registres amb identics valors a totes les variables per tal de valorar si tenim registres duplicats
-```{r}
+Revisem si tenim registres amb identics valors a totes les variables per tal de idetificar si tenim registres duplicats
+```{r, echo = FALSE, results = 'show'}
 dim(unique(dades))
 ```
-Comprovem que hi ha 302 registres diferents, per la qual cosa, donat el
-nivell d'especificitat de les dades, considerem que hi ha un registre
-repetit.
+Comprovem que hi ha 302 registres diferents, per la qual cosa, donat el nivell d'especificitat de les dades, considerem que hi ha un registre repetit.
 
-Eliminem el registre repetit i conservem la resta donat que tenim un
-número de registres perfectement gestionable i, per tant no és necessari plantejar agrupacions que facilitin l'ús del dataset
-```{r}
+Eliminem el registre repetit i conservem la resta donat que tenim un número de registres perfectement gestionable i, per tant no és necessari plantejar agrupacions que facilitin l'ús del dataset
+```{r, echo = FALSE, results = 'show'}
 dades <- unique(dades)
 ```
 
 Donat que l'estudi està dirigit a identificar diferències entre homes i dones, ens interessa comprobar quina informació tenim per cada grup
-```{r}
+```{r, echo = FALSE, results = 'show'}
 print('Distribució entre homes i dones en valors absoluts:')
 print(addmargins(table(dades$sex, dades$output)))
 print('Pes relatiu de cada sexe dins el valor de la variable output:')
@@ -166,7 +153,11 @@ print('Pes relatiu de la variable output dins de cada sexe:')
 print(round(prop.table(table(dades$sex, dades$output), 1), 2))
 ```
 Hi ha 207 homes i 96 dones i la distribució del camp output dins de cada grup és diferent, tenint més pes el valor 1 en dones que en homes.
-```{r}
+
+```{r, echo = FALSE, results = 'show'}
+par(mar = c(5, 4, 4, 8))
+par(cex.axis = 0.8) 
+
 grafic <- barplot(table(dades$output, dades$sex),
                   beside = TRUE,
                   col = c("grey", "black"), legend = FALSE)
@@ -182,13 +173,13 @@ legend("topright", legend = c("menys risc", "més risc"),
 
 ## Les dades contenen zeros o elements buits? Gestiona cadascun d'aquests casos
 
-Tot i que amb el resum del dataset no apareixien valors perduts, fem una adhoc
+Tot i que amb al resum del dataset no apareixien valors perduts, fem una revisió adhoc de valors perduts i en blanc
 
-```{r}
+```{r, echo = FALSE, results = 'show'}
 colSums(is.na(dades))
 ```
 
-```{r}
+```{r, echo = FALSE, results = 'show'}
 colSums(dades=="")
 ```
 
@@ -197,9 +188,9 @@ Es confirma que no tenim valors perduts, per tant no em de fer cap modificació 
 
 ## Identifica i gestiona els valors extrems
 
-Fem una revisió de la possible existència de valors extrems de forma global
+Fem una revisió de la possible existència de valors extrems en el conjunt de les dades
 
-```{r}
+```{r, echo = FALSE, results = 'show'}
 var_out <- c()
 for (i in c(1,3:ncol(dades))){
   outl <- boxplot.stats(dades[,i])$out
@@ -207,18 +198,18 @@ for (i in c(1,3:ncol(dades))){
 }
 print(names(dades)[var_out])
 ```
+Veiem que tenim 7 variables que a priori contenen valors extrems
 
-Veiem que tenim 7 variables amb valors extrems
-```{r}
+```{r, echo = FALSE, results = 'show'}
 par(mfrow = c(3,3), mar = c(0, 0, 1, 0) + 0.2)
 for (i in var_out) {
   boxplot(dades[, i], main = colnames(dades)[i])
 }
 ```
-Per les variables fbs, caa i thall, tot i el resultat del gràfics, podem descartar el fet que hi hagi valors extrems donat que es tracta de variables discretes i els valors observats estan dins de les categories considerades.
+Per les variables fbs, caa i thall, tot i el resultat gràfic, podem descartar el fet que hi hagi valors extrems donat que es tracta de variables discretes i els valors observats estan dins de les categories considerades.
 
-Apliquem el criteri de les dues desviacions estàndar per tal de valorar si mantenim el valors originals
-```{r, warning=FALSE}
+Apliquem el criteri de les dues desviacions estàndar per tal de identificar si mantenim el valors originals
+```{r, warning=FALSE, echo = FALSE, results = 'show'}
 trtbps_outliers <- abs(scale(dades$trtbps)) > 2
 chol_outliers <- abs(scale(dades$chol)) > 2
 thalachh_outliers <- abs(scale(dades$thalachh)) > 2
@@ -229,8 +220,8 @@ print(paste("Número d'outliers considerant les dades de forma global:",
             count(dades[outliers > 0,])))
 ```
 
-Donat que l'estudi es basa en la comparació entre homes i dones, fe una valoració dels valors extrems per separat, per tal d'evitar que els valors d'un sexe amaguin informació rellevant a l'altra
-```{r}
+Donat que l'estudi es basa en la comparació entre homes i dones, fem una valoració dels valors extrems per separat, per tal d'evitar que els valors d'un sexe amaguin informació rellevant a l'altra
+```{r, echo = FALSE, results = 'show'}
 dades_homes <- dades[dades$sex=="Home",]
 dades_dones <- dades[dades$sex=="Dona",]
 
@@ -251,7 +242,7 @@ print(names(dades_homes)[var_out_homes])
 Així com en l'estudi conjunt trobavem valors extrems a les variables trtbps, chol,  thalachh i oldpeak, quan estudiem els sexes per separat varien aquests resultats. Per les dones no hi ha variació en quant a variables, donat que la variable exng en ser discreta no la podem considerar, i pels homes no hi haurà valors extrems per la variable chol.
 
 Revisem els registres que contenen valors extrems considerant dues desviacions estàndar i comptem quants registres es veuen afectats per outliers, considerant les dades de forma global i separant per sexes 
-```{r}
+```{r, echo = FALSE, results = 'show'}
 print(paste("Número d'outliers considerant les dades de forma global:",
             count(dades[outliers > 0,])))
 print(paste("Número d'outliers en dones considerant les dades de forma global:",
@@ -274,27 +265,27 @@ oldpeak_outliers_h <- abs(scale(dades_homes$oldpeak)) > 2
 outliers_homes <- trtbps_outliers_h + thalachh_outliers_h + oldpeak_outliers_h
 print(paste("Número d'outliers en homes:", count(dades_homes[outliers_homes > 0,])))
 ```
-Podem extreure una primera conclusió sobre la importància de tractar les dades per separat donat que es reduix el número d'outliers. Tractar les dades conjuntament implicaria fer un tractament de les dades errònia i descartar registres o imputar valors de forma equivocada, a banda de que ens facilita una primera informació al respecte dels diferents valors observats en funció de si es tracta de dones o d'homes.
+Podem extreure una primera conclusió sobre la importància de tractar les dades per separat donat que es redueix el número d'outliers. Tractar les dades conjuntament implicaria fer un tractament de les dades errònia i descartar registres o imputar valors de forma equivocada, a banda de que ens facilita una primera informació al respecte dels diferents valors observats en funció de si es tracta de dones o d'homes.
 
-Per tal de decidir si realment els valors trobats són erronis cal tenir un coneixement ampli del tipus de dades i de si els valors que estem identificant són relament erronis. Per altra banda, amb una mostra de 302 registres si 41 tenen dades errònies, hauríem de considerar que hi ha hagut massa errors en la recolecció de les dades i la mostra no és gaire útil. Per tant, considerarem que valors detectats són correctes i continuarem l'anàlisi sense imputar nous valors, tenint present que aquest és un exercici teòric i que en un cas real hauríem de consultar amb els experts per tal de validar quin és el tractament correcte.
+Per tal de decidir si realment els valors trobats són erronis cal tenir un coneixement ampli del tipus de dades i de si els valors que estem identificant són relament erronis. Per altra banda, amb una mostra de 302 registres si 41 tenen dades errònies, hauríem de considerar que hi ha hagut massa errors en la recolecció de les dades i la mostra no és gaire útil. Per tant, per continuar amb l'estudi, considerarem que els valors detectats són correctes i continuarem l'anàlisi sense imputar nous valors, tenint present que aquest és un exercici teòric i que en un cas real hauríem de consultar amb els experts per tal de validar quin és el tractament correcte.
 
 
 # Anàlisi de les dades
 
 ## Selecció dels grups de dades que es volen analitzar/comparar (p. e., si es volen comparar grups de dades, quins són aquests grups i quins tipus d'anàlisi s'aplicaran?).
 
-Com ja s'ha comentat, l'objectiu de l'estudi és la comparació de les dades existents entre homes i dones per tal de valorar la diferent incidència que puguin tenir els resultats de les proves en el fet de patir una cardiopatia.
+Com ja s'ha comentat, l'objectiu de l'estudi és la comparació de les dades existents entre homes i dones per tal de valorar si posteriors estudis han de considerar les dades per separat.
 
-Ja hem vist que el tractament diferenciat ens porta a detectar valors extrems diferents en el cas d'homes i de dones. 
+Ja hem vist que el tractament diferenciat ens permet detectar valors extrems diferents en el cas d'homes i de dones. 
 
-Tot i que es tracta d'un tècnica utilitzada per reduir la dimensionalitat de les dades, farem una anàlisi PCA per tal de valorar si les variables tenen la mateixa importància pels dos grups i d'aquesta manera refermar la idea de fer un tractament diferenciat
-```{r}
+Tot i que es tracta d'una tècnica utilitzada per reduir la dimensionalitat de les dades, farem una anàlisi PCA per tal de valorar si les variables tenen la mateixa importància pels dos grups i d'aquesta manera refermar la idea de fer un tractament diferenciat
+```{r, echo = FALSE, results = 'show'}
 dades_acp_dones <- prcomp(dades_dones[,c(1,3:ncol(dades_dones))], center = TRUE, scale = TRUE)
 print("ACP dones:")
 summary(dades_acp_dones)
 ```
 
-```{r}
+```{r, echo = FALSE, results = 'show'}
 dades_acp_homes <- prcomp(dades_homes[,c(1,3:ncol(dades_homes))], center = TRUE, scale = TRUE)
 print("ACP homes:")
 summary(dades_acp_homes)
@@ -304,7 +295,7 @@ S'aprecia una diferència entre el resultat pels homes i per les dones, sent for
 En quant a la interpretació del resultat, per les dones les dues primeres components principals expliquen el 40,81% de la variància, mentre que pels homes acumulen 36,68%, però la participació de les diferents components principals està força repartida, necessitant fins 9 per les dones i 10 pels homes per arribar al 90%.
 
 Com a criteri de selecció considerarem les components amb una variància superior a 1
-```{r}
+```{r, echo = FALSE, results = 'show'}
 var_dades_acp_dones <- dades_acp_dones$sdev ^ 2
 print(var_dades_acp_dones)
 var_dades_acp_homes <- dades_acp_homes$sdev ^ 2
@@ -312,8 +303,7 @@ print(var_dades_acp_homes)
 ```
 Per tant, considerarem les 5 primeres per les dones i les 4 primeres pels homes. De totes maneres, revisarem la importància de cada variable a les 5 primeres components principals diferenciant per sexes
 
-Ara mirem com intervenen les variables en cada una de les 5 primeres components principals (tot i que per les dones en tenim prou amb 4, utilitzarem les 5 primeres per comparar els dos grups)
-```{r}
+```{r, echo = FALSE, results = 'show'}
 var_dones <- get_pca_var(dades_acp_dones)
 var_homes <- get_pca_var(dades_acp_homes)
 
@@ -332,7 +322,7 @@ De forma visual es pot apreciar que hi ha diferències en quant a la importànci
 
 Tenim cinc variables contínues: age, trtbps, chol, thalachh i oldpeak a les quals aplicarem el test de Shapiro per comprovar la seva **normalitat** a les dades en conjunt
 
-```{r}
+```{r, echo = FALSE, results = 'show'}
 shapiro.test(dades$age)
 shapiro.test(dades$trtbps)
 shapiro.test(dades$chol)
@@ -342,9 +332,9 @@ shapiro.test(dades$oldpeak)
 
 En els cinc casos, observant el valor de p, podem dir que, segons el test Shapiro, es rebutja la hipòtesi nul·la i, per tant, no es distribueixen com una normal.
 
-Apliquem el test de Kolmogorov_Smirnov per tal de valorar si els resultats els mateixos
+Apliquem el test de Kolmogorov_Smirnov per tal de valorar si els resultats coincideixen
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, echo = FALSE, results = 'show'}
 ks.test(dades$age, pnorm, mean(dades$age), sd(dades$age))
 ks.test(dades$trtbps, pnorm, mean(dades$trtbps), sd(dades$trtbps))
 ks.test(dades$chol, pnorm, mean(dades$chol), sd(dades$chol))
@@ -357,26 +347,26 @@ Obtenim resultats contradictoris per age, chol i thalachh, per tant, sent conser
 Comprovem l'**homoscedasticitat** per les quatre variables
 
 Apliquem el test de fligner sobre les cinc variables, al considerar que no segueixen una distribució normal
-```{r, warning=FALSE}
+```{r, warning=FALSE, echo = FALSE, results = 'show'}
 fligner.test(trtbps ~ sex, data = dades)
 fligner.test(oldpeak ~ sex, data = dades)
 fligner.test(age ~ sex, data = dades)
 fligner.test(chol ~ sex, data = dades)
 fligner.test(thalachh ~ sex, data = dades)
 ```
-Segons els resultats obtingut podem concloure que oldpeak, chol i thalachh tenen variàncies estadísticament diferents per cada sexe mentre que age i trtbps tenen variànces estadísticamente iguals per cada sexe.
+Segons els resultats obtingut podem concloure que oldpeak, chol i thalachh tenen variàncies estadísticament diferents per cada sexe mentre que age i trtbps tenen variànces estadísticamente iguals.
 
 
 ## Aplicació de proves estadístiques per comparar els grups de dades. En funció de les dades i de l'objectiu de l'estudi, aplicar proves de contrast d'hipòtesis, correlacions, regressions, etc. Aplicar almenys tres mètodes d'anàlisi diferents.
 
-En base a l'estudi de components principals realitzats prèviament, considerarem les següents variables: oldpeak, age i chol, per la incidència que tenen en el grup de dones, i thalachh, trtbps i fbs, per la incidència que tenen en el grup d'homes. A més considerarem la variable output.
+En base a l'estudi de components principals realitzats prèviament, considerarem les següents variables: oldpeak, age i chol, per la incidència que tenen en el grup de dones, i thalachh, trtbps i fbs, per la incidència que tenen en el grup d'homes. A més utilitzarem la variable output.
 
 
-Donat que hem considerat que les variables contínues no segueixen una distribució normal, utilitzarem test no paramètrics per aquests variables.
+Donat que hem considerat que les variables contínues no segueixen una distribució normal, utilitzarem tests no paramètrics per aquestes variables.
 
 Considerem que els grups dades separats per sexe són independents per la qual cosa aplicarem el test Mann-Whitney per comparar les distribucions
 
-```{r}
+```{r, echo = FALSE, results = 'show'}
 wilcox.test(oldpeak ~ sex, data = dades)
 wilcox.test(age ~ sex, data = dades)
 wilcox.test(chol ~ sex, data = dades)
@@ -386,46 +376,74 @@ wilcox.test(trtbps ~ sex, data = dades)
 Donat que obtenim una p-valor inferior al 0,05 per chol podem concloure que aquesta variable té diferències estadísticament significatives per cada sexe, mentre que a les altres quatre variables contínues no.
 
 Apliquem el test chi-quadrat a la variable discreta fbs
-```{r}
+```{r, echo = FALSE, results = 'show'}
 chisq.test(table(dades[, c("sex", "fbs")]))
 ```
 Podem concloure que no hi ha diferències significatives en la variable fbs per sexes.
 
-```{r}
+Fem el mateix exercici amb la variable output
+```{r, echo = FALSE, results = 'show'}
 chisq.test(table(dades[, c("sex", "output")]))
 ```
 En aquest cas sí s'aprecien diferències significatives, la qual cosa és especialment rellevant pel nostre estudi, sempre i quan considerem que la mostra es suficientment representativa de la població.
 
 
-Observem les relacions entre les diferents variables contínues per tal valorar si hi pot haver correlació entre elles que ens permeti generar un model de regressió lineal.
-```{r}
+Observem les relacions entre les diferents variables contínues per tal valorar visualment si hi pot haver una correlació entre elles que ens permeti generar un model de regressió lineal.
+
+```{r, echo = FALSE, results = 'show'}
 plot(dades[, c("oldpeak", "age", "chol", "thalachh", "trtbps")])
 ```
-A priori, sembla que hi podria haver una certa relació entre age i chol i també entre age i thalachh
-```{r}
+A priori, sembla que hi podria haver una certa relació entre age i chol i també entre age i thalachh.
+
+Estudiem el grau de correlació entre les variables age i chol
+```{r, echo = FALSE, results = 'show'}
 age_chol <- lm(age ~ chol, dades)
 summary(age_chol)
 ```
-```{r}
+Fem el mateix estudi per les variables age i thalachh
+```{r, echo = FALSE, results = 'show'}
 age_thalachh <- lm(age ~ thalachh, dades)
 summary(age_thalachh)
 ```
-Com podem observar en el resultats, la correlació entre els dos parells de variables és feble. 
+Com podem observar en els valors obtingut pel coeficient de determinació, la correlació entre els dos parells de variables és feble. 
 
-Donat que hem considerat sis variables com a més significatives per l'estudi, calcularem la correlació existent entre les cinc d'aquestes que són contínues i output per valorar el nivell de correlació existent
-```{r}
+Donat que hem considerat sis variables com a més significatives per l'estudi, calcularem la correlació existent entre les cinc que són contínues i output per valorar el nivell de correlació existent
+```{r, echo = FALSE, results = 'show'}
 cor(dades[, c("oldpeak", "age", "chol", "thalachh", "trtbps", "output")], method = "spearman")
 ```
-```{r, warning=FALSE}
-cor.test(dades$oldpeak, dades$output, method = "spearman")
-```
+Podem veure als resultats que la correlació és baixa per oldpeak i thalachh, sent inversa per la primera. Pel cas d'age, chol i trtbps tenim una correlació molt baixa.
 
+Fem ara el mateix càlcul diferenciant homes i dones
+
+```{r, echo = FALSE, results = 'show'}
+cor(dades_dones[, c("oldpeak", "age", "chol", "thalachh", "trtbps", "output")], method = "spearman")
+```
+```{r, echo = FALSE, results = 'show'}
+cor(dades_homes[, c("oldpeak", "age", "chol", "thalachh", "trtbps", "output")], method = "spearman")
+```
+Podem veure com els resultats varien. En el cas de les dones, respecte a output, les variacions més significatives són la disminució de la correlació per thalachh i l'augment per trtbps, sense arribar a ser alta. Pel cas del homes, la correlació respecte a output per trtbps passa a ser quasi zero, mentre que puja la correació de les altres variables.
+
+Per analitzar si les correlacions són significatives, farem un test d'Spearman per oldpeak i trtbps, per les dones, i per oldpeak i thalachh pels homes
+```{r, warning=FALSE, echo = FALSE, results = 'show'}
+cor.test(dades_dones$oldpeak, dades_dones$output, method = "spearman")
+cor.test(dades_dones$trtbps, dades_dones$output, method = "spearman")
+cor.test(dades_homes$oldpeak, dades_homes$output, method = "spearman")
+cor.test(dades_homes$thalachh, dades_homes$output, method = "spearman")
+```
+Podem apreciar com en cap cas són les correlacions són significativament diferents de zero.
 
 # Conclusions
 
-A partir dels resultats obtinguts, quines són les conclusions?
+## A partir dels resultats obtinguts, quines són les conclusions?
 
-Els resultats permeten respondre al problema?
+L'estudi de les diferents varibles permet determinar que és necessari diferenciar entre homes i dones per tal d'estudiar les probabilitats de patir cardiopaties donats que tant les distribucions de les variables com la importància de les mateixes per cada sexe és diferent i no fer-ho pot implicar descartar dades de forma errònia, com hem vist en l'estudi d'outliers.
+
+Per altra banda, considerem que el consell d'un expert per tal de valorar si els valors identificats com a outliers ho són o no, pot suposar que el resultat obtingut sigui diferent i, per tant, modificar les conclusions.
+
+
+## Els resultats permeten respondre al problema?
+
+Els resultats són determinants i responen clarament el problema plantejat.
 
 
 # Taula de contribucions
